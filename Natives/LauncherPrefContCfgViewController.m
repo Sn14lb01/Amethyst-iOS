@@ -22,7 +22,6 @@ typedef void(^CreateView)(UITableViewCell *, NSString *, NSDictionary *);
 @property(nonatomic) NSMutableDictionary *currentMappings;
 @property(nonatomic) NSDictionary *keycodePlist;
 @property(nonatomic) UIPickerView *editPickMapping;
-@property(nonatomic) UIToolbar *editPickToolbar;
 @property(nonatomic) UITextField *activeTextField;
 @property(nonatomic) NSArray<NSString*>* prefSections;
 @property(nonatomic) NSMutableArray<NSNumber*>* prefSectionsVisibility;
@@ -59,14 +58,10 @@ typedef void(^CreateView)(UITableViewCell *, NSString *, NSDictionary *);
     self.editPickMapping = [[UIPickerView alloc] init];
     self.editPickMapping.delegate = self;
     self.editPickMapping.dataSource = self;
-    self.editPickToolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(0.0, 0.0, self.view.frame.size.width, 44.0)];
-    UIBarButtonItem *btnFlexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil];
-    UIBarButtonItem *editDoneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(closeTextField:)];
-    self.editPickToolbar.items = @[btnFlexibleSpace, editDoneButton];
 }
 
 - (void)loadGamepadConfigurationFile {
-    NSString *gamepadPath = [NSString stringWithFormat:@"%s/controlmap/gamepads/%@", getenv("POJAV_HOME"), getPrefObject(@"control.default_gamepad_ctrl")];
+    NSString *gamepadPath = [NSString stringWithFormat:@"%s/controlmap/gamepads/%@", getenv("AME_HOME"), getPrefObject(@"control.default_gamepad_ctrl")];
     self.currentMappings = parseJSONFromFile(gamepadPath);
     self.currentFileName = [getPrefObject(@"control.default_ctrl") stringByDeletingPathExtension];
     NSPredicate *filterPredicate = [NSPredicate predicateWithBlock:^BOOL(id obj, NSDictionary *dict) {
@@ -123,7 +118,7 @@ typedef void(^CreateView)(UITableViewCell *, NSString *, NSDictionary *);
     } else if(indexPath.section == 1 || indexPath.section == 2) {
         NSNumber *keycode = (NSNumber *)item[@"keycode"];
         cell.textLabel.text = localize(([NSString stringWithFormat:@"controller_configurator.%@.title.%@", getPrefObject(@"control.controller_type"), item[@"name"]]), nil);
-        UITextField *view = (id)cell.accessoryView;
+        PickTextField *view = (id)cell.accessoryView;
         if (view == nil) {
             view = [[PickTextField alloc] initWithFrame:CGRectMake(0, 0, cell.bounds.size.width / 2.1, cell.bounds.size.height)];
             [view addTarget:view action:@selector(resignFirstResponder) forControlEvents:UIControlEventEditingDidEndOnExit];
@@ -136,8 +131,8 @@ typedef void(^CreateView)(UITableViewCell *, NSString *, NSDictionary *);
             view.textAlignment = NSTextAlignmentRight;
             view.tintColor = UIColor.clearColor;
             view.adjustsFontSizeToFitWidth = YES;
-            view.inputAccessoryView = self.editPickToolbar;
             view.inputView = self.editPickMapping;
+            [view setupDoneButtonWithTarget:self action:@selector(closeTextField:)];
             cell.accessoryView = view;
         }
         view.text = self.keyCodeMap[[self.keyValueMap indexOfObject:keycode]];
@@ -240,7 +235,7 @@ typedef void(^CreateView)(UITableViewCell *, NSString *, NSDictionary *);
 
 - (void)actionOpenFilePicker:(void (^)(NSString *name))handler {
     FileListViewController *vc = [[FileListViewController alloc] init];
-    vc.listPath = [NSString stringWithFormat:@"%s/controlmap/gamepads", getenv("POJAV_HOME")];
+    vc.listPath = [NSString stringWithFormat:@"%s/controlmap/gamepads", getenv("AME_HOME")];
     
     vc.whenItemSelected = handler;
     vc.modalPresentationStyle = UIModalPresentationPopover;
@@ -283,7 +278,7 @@ typedef void(^CreateView)(UITableViewCell *, NSString *, NSDictionary *);
             showDialog(localize(@"custom_controls.control_menu.save.error.json", nil), error.localizedDescription);
             return;
         }
-        BOOL success = [jsonData writeToFile:[NSString stringWithFormat:@"%s/controlmap/gamepads/%@.json", getenv("POJAV_HOME"), field.text] options:NSDataWritingAtomic error:&error];
+        BOOL success = [jsonData writeToFile:[NSString stringWithFormat:@"%s/controlmap/gamepads/%@.json", getenv("AME_HOME"), field.text] options:NSDataWritingAtomic error:&error];
         if (!success) {
             showDialog(localize(@"custom_controls.control_menu.save.error.write", nil), error.localizedDescription);
             return;
@@ -309,7 +304,7 @@ typedef void(^CreateView)(UITableViewCell *, NSString *, NSDictionary *);
 }
 
 - (void)exitButtonSelector {
-    NSString *gamepadPath = [NSString stringWithFormat:@"%s/controlmap/gamepads/%@", getenv("POJAV_HOME"), getPrefObject(@"control.default_gamepad_ctrl")];
+    NSString *gamepadPath = [NSString stringWithFormat:@"%s/controlmap/gamepads/%@", getenv("AME_HOME"), getPrefObject(@"control.default_gamepad_ctrl")];
     if([self.currentMappings isEqualToDictionary:parseJSONFromFile(gamepadPath)]) {
         [self dismissModalViewController];
     } else {

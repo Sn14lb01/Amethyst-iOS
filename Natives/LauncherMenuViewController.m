@@ -83,7 +83,7 @@
      (id)[LauncherMenuCustomItem
           title:localize(@"login.menu.sendlogs", nil)
           imageName:@"square.and.arrow.up" action:^{
-        NSString *latestlogPath = [NSString stringWithFormat:@"file://%s/latestlog.old.txt", getenv("POJAV_HOME")];
+        NSString *latestlogPath = [NSString stringWithFormat:@"file://%s/latestlog.old.txt", getenv("AME_HOME")];
         NSLog(@"Path is %@", latestlogPath);
         UIActivityViewController *activityVC;
         if (realUIIdiom != UIUserInterfaceIdiomTV) {
@@ -130,15 +130,18 @@
     
     [self updateAccountInfo];
     
-    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:1 inSection:0];
     [self.tableView selectRowAtIndexPath:indexPath animated:YES scrollPosition:UITableViewScrollPositionNone];
     [self tableView:self.tableView didSelectRowAtIndexPath:indexPath];
+    self.lastSelectedIndex = 1;
     
     if (getEntitlementValue(@"get-task-allow")) {
         [self displayProgress:localize(@"login.jit.checking", nil)];
         if (isJITEnabled(false)) {
             [self displayProgress:localize(@"login.jit.enabled", nil)];
             [self displayProgress:nil];
+        } else if (@available(iOS 17.0, *)) {
+            // enabling JIT for 17.0+ is done when we actually launch the game
         } else {
             [self enableJITWithAltKit];
         }
@@ -292,13 +295,13 @@
 
     // Reset states
     unsetenv("DEMO_LOCK");
-    setenv("POJAV_GAME_DIR", [NSString stringWithFormat:@"%s/Library/Application Support/minecraft", getenv("POJAV_HOME")].UTF8String, 1);
+    setenv("GAME_DIR", [NSString stringWithFormat:@"%s/Library/Application Support/minecraft", getenv("AME_HOME")].UTF8String, 1);
 
     id subtitle;
     if (isDemo) {
         subtitle = localize(@"login.option.demo", nil);
         setenv("DEMO_LOCK", "1", 1);
-        setenv("POJAV_GAME_DIR", [NSString stringWithFormat:@"%s/.demo", getenv("POJAV_HOME")].UTF8String, 1);
+        setenv("GAME_DIR", [NSString stringWithFormat:@"%s/.demo", getenv("AME_HOME")].UTF8String, 1);
     } else if (selected[@"xboxGamertag"] == nil) {
         subtitle = localize(@"login.option.local", nil);
     } else {

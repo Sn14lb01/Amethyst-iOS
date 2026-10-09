@@ -131,14 +131,14 @@
               @"icon": @"trash",
               @"type": self.typeButton,
               @"enableCondition": ^BOOL(){
-                  NSString *demoPath = [NSString stringWithFormat:@"%s/.demo", getenv("POJAV_HOME")];
+                  NSString *demoPath = [NSString stringWithFormat:@"%s/.demo", getenv("AME_HOME")];
                   int count = [NSFileManager.defaultManager contentsOfDirectoryAtPath:demoPath error:nil].count;
                   return whenNotInGame() && count > 0;
               },
               @"showConfirmPrompt": @YES,
               @"destructive": @YES,
               @"action": ^void(){
-                  NSString *demoPath = [NSString stringWithFormat:@"%s/.demo", getenv("POJAV_HOME")];
+                  NSString *demoPath = [NSString stringWithFormat:@"%s/.demo", getenv("AME_HOME")];
                   NSError *error;
                   if([NSFileManager.defaultManager removeItemAtPath:demoPath error:&error]) {
                       [NSFileManager.defaultManager createDirectoryAtPath:demoPath
@@ -366,20 +366,12 @@
         ], @[
             // Debug settings - only recommended for developer use
             @{@"icon": @"ladybug"},
-            @{@"key": @"debug_universal_script_jit",
-                @"icon": @"scroll",
-                @"type": self.typeSwitch,
-                @"requestReload": @YES,
-                @"enableCondition": ^BOOL(){
-                    return DeviceRequiresTXMWorkaround() && whenNotInGame();
-                },
-            },
             @{@"key": @"debug_always_attached_jit",
                 @"hasDetail": @YES,
                 @"icon": @"app.connected.to.app.below.fill",
                 @"type": self.typeSwitch,
                 @"enableCondition": ^BOOL(){
-                    return getPrefBool(@"debug.debug_universal_script_jit") && whenNotInGame();
+                    return DeviceHasJITFlags(JIT_FLAG_FORCE_MIRRORED | JIT_FLAG_HAS_TXM) && whenNotInGame();
                 },
             },
             @{@"key": @"debug_skip_wait_jit",
@@ -442,7 +434,7 @@
         return [NSString stringWithFormat:@"Angel Aura Amethyst %@-%s (%s/%s)\n%@ on %@ (%s)\nPID: %d",
             NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"],
             CONFIG_TYPE, CONFIG_BRANCH, CONFIG_COMMIT,
-            UIDevice.currentDevice.completeOSVersion, [HostManager GetModelName], getenv("POJAV_DETECTEDINST"), getpid()];
+            UIDevice.currentDevice.completeOSVersion, [HostManager GetModelName], getenv("AME_DETECTEDINST"), getpid()];
     }
 
     NSString *footer = NSLocalizedStringWithDefaultValue(([NSString stringWithFormat:@"preference.section.footer.%@", self.prefSections[section]]), @"Localizable", NSBundle.mainBundle, @" ", nil);
